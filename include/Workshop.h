@@ -14,7 +14,7 @@ private:
 
 public:
     explicit Workshop(const std::string& name);
-    ~Workshop() = default;
+    ~Workshop();
 
     std::string getName() const;
 

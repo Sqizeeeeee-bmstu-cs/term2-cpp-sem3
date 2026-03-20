@@ -9,7 +9,7 @@ void Lathe::process() {
         start();
     }
     
-    std::cout << "Станок " << getModel() << " работает";
+    std::cout << "Станок " << getModel() << " работает" << std::endl;
 }
 
 double Lathe::getMaxDiameter() const {

@@ -6,7 +6,7 @@ Accountant::Accountant(const std::string& name, int age, int id, const std::stri
 
 void Accountant::work() {
 
-    std::cout << "Бухгалтер " << getName() << " из отдела " << getDepartment() << " считает зарплату";
+    std::cout << "Бухгалтер " << getName() << " из отдела " << getDepartment() << " считает зарплату" << std::endl;
     // вывести сообщение: "Бухгалтер [имя] из отдела [department] считает зарплату"
 }
 

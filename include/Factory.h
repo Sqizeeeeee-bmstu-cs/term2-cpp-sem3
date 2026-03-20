@@ -16,7 +16,6 @@ private:
 
 public:
     explicit Factory(const std::string& name);
-    ~Factory();
 
     std::string getName() const;
 
