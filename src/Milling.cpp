@@ -14,3 +14,7 @@ void Milling::process() {
 int Milling::getSpindleSpeed() const {
     return spindleSpeed;
 }
+
+std::string Milling::getType() const {
+    return "Фрезерный станок";
+}

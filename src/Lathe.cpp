@@ -15,3 +15,7 @@ void Lathe::process() {
 double Lathe::getMaxDiameter() const {
     return maxDiameter;
 }
+
+std::string Lathe::getType() const {
+    return "Токарный станок";
+}

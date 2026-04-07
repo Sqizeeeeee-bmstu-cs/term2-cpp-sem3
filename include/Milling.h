@@ -11,6 +11,8 @@ public:
     Milling(const std::string& model, int power, int spindleSpeed);
     
     void process() override;
+    std::string getType() const override;
+    
     int getSpindleSpeed() const;
 };
 

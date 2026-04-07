@@ -21,6 +21,7 @@ public:
     void stop();
 
     virtual void process() = 0;
+    virtual std::string getType() const = 0;
 };
 
 #endif

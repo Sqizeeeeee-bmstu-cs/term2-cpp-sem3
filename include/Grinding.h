@@ -11,6 +11,8 @@ public:
     Grinding(const std::string& model, int power, double precision);
     
     void process() override;
+    std::string getType() const override;
+    
     double getPrecision() const;
 };
 

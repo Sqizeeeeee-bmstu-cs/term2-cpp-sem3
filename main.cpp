@@ -1,5 +1,9 @@
 #include <iostream>
 #include <memory>
+#include <vector>
+#include <typeinfo>
+
+
 #include "Human.h"
 #include "Worker.h"
 #include "Accountant.h"
@@ -10,6 +14,15 @@
 #include "Grinding.h"
 #include "Workshop.h"
 #include "Factory.h"
+
+void demonstratePolymorphism(Machine& machine) {
+    std::cout << "Тип станка: " << machine.getType() << std::endl;
+    std::cout << "Модель: " << machine.getModel() << std::endl;
+    std::cout << "Мощность: " << machine.getPower() << " кВт" << std::endl;
+    std::cout << "Выполнение работы: ";
+    machine.process();
+    std::cout << std::endl;
+}
 
 int main() {
     std::cout << "=== Система управления заводом ===\n\n";
@@ -78,6 +91,38 @@ int main() {
     std::cout << "\n--- Увольнение работника ---\n";
     factory.fireWorker(1002);  // увольняем Сергея
     factory.showInfo();
+
+    Lathe lathe("16K20", 11, 400);
+    Milling milling("6R12", 7, 1600);
+    Grinding grinding("3M174", 5, 0.002);
+
+    demonstratePolymorphism(lathe);
+    demonstratePolymorphism(milling);
+    demonstratePolymorphism(grinding);
+
+    std::vector<std::unique_ptr<Machine>> machines;
+
+    machines.push_back(std::make_unique<Lathe>("УмныйТокарь", 15, 500));
+    machines.push_back(std::make_unique<Milling>("УмнаяФреза", 10, 3000));
+    machines.push_back(std::make_unique<Grinding>("УмныйШлифовщик", 8, 0.0005));
+
+    std::cout << "\n--- Полиморфный контейнер станков ---\n";
+    for (const auto& m : machines) {
+        demonstratePolymorphism(*m);
+    }
+
+    std::cout << "\n--- Демонстрация dynamic_cast и typeid ---\n";
+    for (const auto& m : machines) {
+        std::cout << "Фактический тип: " << typeid(*m).name() << std::endl;
+        
+        if (auto lathe = dynamic_cast<Lathe*>(m.get())) {
+            std::cout << "  Это токарный станок, макс. диаметр: " << lathe->getMaxDiameter() << " мм" << std::endl;
+        } else if (auto milling = dynamic_cast<Milling*>(m.get())) {
+            std::cout << "  Это фрезерный станок, обороты: " << milling->getSpindleSpeed() << " об/мин" << std::endl;
+        } else if (auto grinding = dynamic_cast<Grinding*>(m.get())) {
+            std::cout << "  Это шлифовальный станок, точность: " << grinding->getPrecision() << " мм" << std::endl;
+        }
+    }
 
     // Освобождение памяти (агрегация — удаляем вручную)
     delete worker1;

@@ -11,6 +11,8 @@ public:
     Lathe(const std::string& model, int power, double maxDiameter);
     
     void process() override;
+    std::string getType() const override;
+    
     double getMaxDiameter() const;
 };
 

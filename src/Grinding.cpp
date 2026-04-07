@@ -14,3 +14,7 @@ void Grinding::process() {
 double Grinding::getPrecision() const {
     return precision;
 }
+
+std::string Grinding::getType() const {
+    return "Шлифовальный станок";
+}
