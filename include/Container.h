@@ -1,42 +1,67 @@
-#ifndef MACHINECONTAINER_H
-#define MACHINECONTAINER_H
+#ifndef MYCONTAINER_H
+#define MYCONTAINER_H
 
 #include <cstddef>
 #include <iterator>
 
-class Machine;
-
-class MachineContainer {
+template <typename T>
+class MyContainer {
 private:
-    Machine** data;
+    T* data;
     size_t size;
     size_t capacity;
 
-    void resize(size_t new_capacity);
+    void resize(size_t new_capacity) {
+        T* new_data = new T[new_capacity];
+        for (size_t i = 0; i < size; ++i) {
+            new_data[i] = data[i];
+        }
+        delete[] data;
+        data = new_data;
+        capacity = new_capacity;
+    }
 
 public:
-    MachineContainer();
-    ~MachineContainer();
+    MyContainer() : data(nullptr), size(0), capacity(0) {}
+    
+    ~MyContainer() {
+        delete[] data;
+    }
 
-    size_t getSize() const;
-    size_t getCapacity() const;
+    size_t getSize() const { return size; }
+    size_t getCapacity() const { return capacity; }
 
-    void push_back(Machine* machine);
-    void pop_back();
+    void push_back(const T& value) {
+        if (size >= capacity) {
+            size_t new_cap = (capacity == 0) ? 1 : capacity * 2;
+            resize(new_cap);
+        }
+        data[size++] = value;
+    }
 
-    Machine* operator[](size_t index) const;
+    void pop_back() {
+        if (size > 0) --size;
+    }
+
+    T& operator[](size_t index) {
+        return data[index];
+    }
+
+    const T& operator[](size_t index) const {
+        return data[index];
+    }
 
     class Iterator {
     private:
-        Machine** ptr;
+        T* ptr;
     public:
         using iterator_category = std::random_access_iterator_tag;
-        using value_type = Machine*;
+        using value_type = T;
         using difference_type = std::ptrdiff_t;
-        using pointer = Machine**;
-        using reference = Machine*&;
+        using pointer = T*;
+        using reference = T&;
 
-        Iterator(Machine** p = nullptr) : ptr(p) {}
+        Iterator(T* p = nullptr) : ptr(p) {}
         
         reference operator*() const { return *ptr; }
         pointer operator->() const { return ptr; }
@@ -63,8 +88,8 @@ public:
         bool operator>=(const Iterator& other) const { return ptr >= other.ptr; }
     };
 
-    Iterator begin();
-    Iterator end();
+    Iterator begin() { return Iterator(data); }
+    Iterator end() { return Iterator(data + size); }
     
     Iterator begin() const { return Iterator(data); }
     Iterator end() const { return Iterator(data + size); }

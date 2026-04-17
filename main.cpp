@@ -1,133 +1,154 @@
-#include "MachineContainer.h"
+#include "Container.h"
 #include "Lathe.h"
 #include "Milling.h"
 #include "Grinding.h"
+#include "Worker.h"
+#include "Accountant.h"
 #include <iostream>
 #include <algorithm>
 #include <string>
 
-// Функция для вывода информации о станке
-void printMachineInfo(const Machine& machine) {
-    std::cout << "Тип: " << machine.getType() 
-              << ", Модель: " << machine.getModel()
-              << ", Мощность: " << machine.getPower() << " кВт" << std::endl;
+
+void printMachineInfo(const Machine& m) {
+    std::cout << "  Тип: " << m.getType() 
+              << ", Модель: " << m.getModel() 
+              << ", Мощность: " << m.getPower() << " кВт" << std::endl;
 }
 
-// Компаратор для сортировки по мощности (по возрастанию)
-bool compareByPower(const Machine* a, const Machine* b) {
+void printHumanInfo(const Human& h) {
+    std::cout << "  Имя: " << h.getName() 
+              << ", Возраст: " << h.getAge() 
+              << ", ID: " << h.getId() << std::endl;
+}
+
+bool compareMachinePower(const Machine* a, const Machine* b) {
     return a->getPower() < b->getPower();
 }
 
-// Компаратор для сортировки по модели (по алфавиту)
-bool compareByModel(const Machine* a, const Machine* b) {
-    return a->getModel() < b->getModel();
+bool compareWorkerAge(const Human* a, const Human* b) {
+    return a->getAge() < b->getAge();
 }
 
-// Предикат для поиска станка по модели
-struct FindByModel {
-    std::string targetModel;
-    FindByModel(const std::string& model) : targetModel(model) {}
-    bool operator()(const Machine* machine) const {
-        return machine->getModel() == targetModel;
+struct FindMachineByModel {
+    std::string target;
+    FindMachineByModel(const std::string& t) : target(t) {}
+    bool operator()(const Machine* m) const {
+        return m->getModel() == target;
+    }
+};
+
+struct FindHumanByName {
+    std::string target;
+    FindHumanByName(const std::string& t) : target(t) {}
+    bool operator()(const Human* h) const {
+        return h->getName() == target;
     }
 };
 
 int main() {
-    std::cout << "=== Демонстрация MachineContainer ===\n\n";
+    std::cout << "=== Демонстрация шаблонного контейнера MyContainer<T> ===\n\n";
 
-    // Создаём контейнер
-    MachineContainer container;
+    std::cout << "--- 1. Контейнер MyContainer<Machine*> (станки) ---\n";
 
-    // Добавляем станки
-    container.push_back(new Lathe("16K20", 11, 400));
-    container.push_back(new Milling("6R12", 7, 1600));
-    container.push_back(new Lathe("1K62", 10, 300));
-    container.push_back(new Grinding("3M174", 5, 0.002));
-    container.push_back(new Milling("VM-1", 4, 12000));
-    container.push_back(new Lathe("DL-20", 15, 500));
+    MyContainer<Machine*> machineContainer;
 
-    std::cout << "Всего станков: " << container.getSize() << "\n\n";
+    machineContainer.push_back(new Lathe("16K20", 11, 400));
+    machineContainer.push_back(new Milling("6R12", 7, 1600));
+    machineContainer.push_back(new Lathe("1K62", 10, 300));
+    machineContainer.push_back(new Grinding("3M174", 5, 0.002));
+    machineContainer.push_back(new Milling("VM-1", 4, 12000));
 
-    // 1. Перебор с помощью итераторов
-    std::cout << "--- Перебор станков (через итераторы) ---\n";
-    for (auto it = container.begin(); it != container.end(); ++it) {
-        printMachineInfo(*(*it));  // (*it) -> Machine*, ещё одна разыменовка
+    std::cout << "Добавлено станков: " << machineContainer.getSize() << "\n\n";
+
+    std::cout << "Перебор станков (через итераторы):\n";
+    for (auto it = machineContainer.begin(); it != machineContainer.end(); ++it) {
+        printMachineInfo(*(*it));
     }
-    std::cout << std::endl;
 
-    // 2. Диапазонный for (работает благодаря begin/end)
-    std::cout << "--- Диапазонный for ---\n";
-    for (const auto& machinePtr : container) {
-        printMachineInfo(*machinePtr);
+    std::cout << "\nПеребор станков (диапазонный for):\n";
+    for (const auto& m : machineContainer) {
+        printMachineInfo(*m);
     }
-    std::cout << std::endl;
 
-    // 3. Поиск станка по модели с помощью std::find_if
-    std::string searchModel = "1K62";
-    auto it = std::find_if(container.begin(), container.end(), 
-                           FindByModel(searchModel));
-    
-    if (it != container.end()) {
-        std::cout << "Найден станок с моделью " << searchModel << ": ";
+    std::cout << "\nПоиск станка с моделью '1K62':\n";
+    auto it = std::find_if(machineContainer.begin(), machineContainer.end(), 
+                           FindMachineByModel("1K62"));
+    if (it != machineContainer.end()) {
+        std::cout << "  Найден: ";
         printMachineInfo(*(*it));
     } else {
-        std::cout << "Станок с моделью " << searchModel << " не найден\n";
-    }
-    std::cout << std::endl;
-
-    // 4. Сортировка по мощности
-    std::cout << "--- Сортировка по мощности (возрастание) ---\n";
-    std::sort(container.begin(), container.end(), compareByPower);
-    
-    for (const auto& machinePtr : container) {
-        std::cout << machinePtr->getModel() 
-                  << " -> " << machinePtr->getPower() << " кВт\n";
-    }
-    std::cout << std::endl;
-
-    // 5. Сортировка по модели
-    std::cout << "--- Сортировка по модели (алфавит) ---\n";
-    std::sort(container.begin(), container.end(), compareByModel);
-    
-    for (const auto& machinePtr : container) {
-        std::cout << machinePtr->getModel() << std::endl;
-    }
-    std::cout << std::endl;
-
-    // 6. Реальная задача: найти все станки с мощностью больше 10 кВт
-    std::cout << "--- Станки с мощностью > 10 кВт ---\n";
-    for (const auto& machinePtr : container) {
-        if (machinePtr->getPower() > 10) {
-            printMachineInfo(*machinePtr);
-        }
+        std::cout << "  Станок не найден\n";
     }
 
-    // 7. Реальная задача: найти самый мощный станок
-    if (container.getSize() > 0) {
-        auto maxPowerIt = std::max_element(container.begin(), container.end(),
+    std::cout << "\nСортировка станков по мощности (возрастание):\n";
+    std::sort(machineContainer.begin(), machineContainer.end(), compareMachinePower);
+    for (const auto& m : machineContainer) {
+        std::cout << "  " << m->getModel() << " -> " << m->getPower() << " кВт\n";
+    }
+
+    if (machineContainer.getSize() > 0) {
+        auto maxIt = std::max_element(machineContainer.begin(), machineContainer.end(),
             [](const Machine* a, const Machine* b) {
                 return a->getPower() < b->getPower();
             });
-        
-        std::cout << "\n--- Самый мощный станок ---\n";
-        printMachineInfo(*(*maxPowerIt));
+        std::cout << "\nСамый мощный станок:\n";
+        printMachineInfo(*(*maxIt));
     }
 
-    // 8. Реальная задача: средняя мощность станков
-    if (container.getSize() > 0) {
-        double totalPower = 0;
-        for (const auto& machinePtr : container) {
-            totalPower += machinePtr->getPower();
-        }
-        double avgPower = totalPower / container.getSize();
-        std::cout << "\n--- Средняя мощность станков: " << avgPower << " кВт ---\n";
+    std::cout << "\n--- 2. Контейнер MyContainer<Human*> (работники) ---\n";
+
+    MyContainer<Human*> humanContainer;
+
+    humanContainer.push_back(new Worker("Иван Петров", 32, 1001, 8));
+    humanContainer.push_back(new Worker("Сергей Сидоров", 28, 1002, 5));
+    humanContainer.push_back(new Accountant("Елена Смирнова", 41, 2001, "Расчётный"));
+    humanContainer.push_back(new Worker("Анна Кузнецова", 35, 1004, 10));
+
+    std::cout << "Добавлено работников: " << humanContainer.getSize() << "\n\n";
+
+    std::cout << "Список работников:\n";
+    for (const auto& h : humanContainer) {
+        printHumanInfo(*h);
     }
 
-    // Освобождение памяти (контейнер не удаляет станки, удаляем вручную)
-    for (auto it = container.begin(); it != container.end(); ++it) {
+    std::cout << "\nПоиск сотрудника по имени 'Сергей Сидоров':\n";
+    auto humanIt = std::find_if(humanContainer.begin(), humanContainer.end(),
+                                FindHumanByName("Сергей Сидоров"));
+    if (humanIt != humanContainer.end()) {
+        std::cout << "  Найден: ";
+        printHumanInfo(*(*humanIt));
+    }
+
+    std::cout << "\nСортировка работников по возрасту:\n";
+    std::sort(humanContainer.begin(), humanContainer.end(), compareWorkerAge);
+    for (const auto& h : humanContainer) {
+        std::cout << "  " << h->getName() << ", возраст: " << h->getAge() << " лет\n";
+    }
+
+    std::cout << "\n--- 3. Контейнер с простыми типами ---\n";
+
+    MyContainer<int> numbers;
+    numbers.push_back(10);
+    numbers.push_back(5);
+    numbers.push_back(8);
+    numbers.push_back(3);
+
+    std::cout << "Числа до сортировки: ";
+    for (const auto& n : numbers) std::cout << n << " ";
+    std::cout << std::endl;
+
+    std::sort(numbers.begin(), numbers.end());
+    std::cout << "Числа после сортировки: ";
+    for (const auto& n : numbers) std::cout << n << " ";
+    std::cout << std::endl;
+
+    for (auto it = machineContainer.begin(); it != machineContainer.end(); ++it) {
         delete *it;
     }
 
-    std::cout << "\n=== Программа завершена ===\n";
+    for (auto it = humanContainer.begin(); it != humanContainer.end(); ++it) {
+        delete *it;
+    }
+
     return 0;
 }
