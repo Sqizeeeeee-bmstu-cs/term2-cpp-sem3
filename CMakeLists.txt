@@ -9,4 +9,4 @@ include_directories(include)
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB MAIN "main.cpp")
 
-add_executable(factory_app ${MAIN} ${SOURCES})
+add_executable(app ${MAIN} ${SOURCES})
