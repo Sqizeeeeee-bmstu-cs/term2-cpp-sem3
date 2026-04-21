@@ -1,4 +1,4 @@
-#include "Container.h"
+#include "MyHeapContainer.h"
 #include "Lathe.h"
 #include "Milling.h"
 #include "Grinding.h"
@@ -7,7 +7,6 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
-
 
 void printMachineInfo(const Machine& m) {
     std::cout << "  Тип: " << m.getType() 
@@ -25,130 +24,142 @@ bool compareMachinePower(const Machine* a, const Machine* b) {
     return a->getPower() < b->getPower();
 }
 
-bool compareWorkerAge(const Human* a, const Human* b) {
-    return a->getAge() < b->getAge();
-}
-
-struct FindMachineByModel {
-    std::string target;
-    FindMachineByModel(const std::string& t) : target(t) {}
-    bool operator()(const Machine* m) const {
-        return m->getModel() == target;
-    }
-};
-
-struct FindHumanByName {
-    std::string target;
-    FindHumanByName(const std::string& t) : target(t) {}
-    bool operator()(const Human* h) const {
-        return h->getName() == target;
-    }
-};
-
 int main() {
-    std::cout << "=== Демонстрация шаблонного контейнера MyContainer<T> ===\n\n";
+    std::cout << "=== Демонстрация шаблонного контейнера MyHeapContainer<T> ===\n\n";
 
-    std::cout << "--- 1. Контейнер MyContainer<Machine*> (станки) ---\n";
+    std::cout << "--- 1. Контейнер MyHeapContainer<Machine*> (станки) ---\n";
 
-    MyContainer<Machine*> machineContainer;
+    MyHeapContainer<Machine*> machineContainer;
 
+    std::cout << "Добавляем станки (заполняем буфер из 5 элементов):\n";
     machineContainer.push_back(new Lathe("16K20", 11, 400));
+    std::cout << "  [+] Lathe 16K20 | Размер: " << machineContainer.getSize() << "\n";
+    
     machineContainer.push_back(new Milling("6R12", 7, 1600));
+    std::cout << "  [+] Milling 6R12 | Размер: " << machineContainer.getSize() << "\n";
+    
     machineContainer.push_back(new Lathe("1K62", 10, 300));
+    std::cout << "  [+] Lathe 1K62 | Размер: " << machineContainer.getSize() << "\n";
+    
     machineContainer.push_back(new Grinding("3M174", 5, 0.002));
+    std::cout << "  [+] Grinding 3M174 | Размер: " << machineContainer.getSize() << "\n";
+    
     machineContainer.push_back(new Milling("VM-1", 4, 12000));
+    std::cout << "  [+] Milling VM-1 | Размер: " << machineContainer.getSize() << " (БУФЕР ПОЛОН)\n";
 
-    std::cout << "Добавлено станков: " << machineContainer.getSize() << "\n\n";
+    std::cout << "\nДобавляем ещё станки (происходит flush буфера в heap):\n";
+    machineContainer.push_back(new Lathe("DIP-300", 8, 500));
+    std::cout << "  [+] Lathe DIP-300 | Размер: " << machineContainer.getSize() << " (FLUSH!)\n";
 
-    std::cout << "Перебор станков (через итераторы):\n";
+    machineContainer.push_back(new Grinding("5E32", 6, 0.001));
+    std::cout << "  [+] Grinding 5E32 | Размер: " << machineContainer.getSize() << "\n";
+
+    std::cout << "\nВсе станки в контейнере:\n";
+    for (size_t i = 0; i < machineContainer.getSize(); i++) {
+        std::cout << "  [" << i << "] ";
+        printMachineInfo(*machineContainer[i]);
+    }
+
+    std::cout << "\nПеребор через итератор (forward):\n";
+    size_t idx = 0;
     for (auto it = machineContainer.begin(); it != machineContainer.end(); ++it) {
+        std::cout << "  [" << idx++ << "] ";
         printMachineInfo(*(*it));
     }
 
-    std::cout << "\nПеребор станков (диапазонный for):\n";
-    for (const auto& m : machineContainer) {
-        printMachineInfo(*m);
+    std::cout << "\nАрифметика итераторов (пример: begin() + 3):\n";
+    auto it = machineContainer.begin() + 3;
+    std::cout << "  Элемент на позиции 3: ";
+    printMachineInfo(*(*it));
+
+    std::cout << "\nРазница между итераторами:\n";
+    auto it_end = machineContainer.end() - 1;
+    std::cout << "  Расстояние от begin до end: " << (machineContainer.end() - machineContainer.begin()) << "\n";
+    std::cout << "  Расстояние от begin до последнего: " << (it_end - machineContainer.begin()) << "\n";
+
+    std::cout << "\nТестирование pop_back():\n";
+    std::cout << "  Размер перед pop_back: " << machineContainer.getSize() << "\n";
+    machineContainer.pop_back();
+    std::cout << "  Размер после pop_back: " << machineContainer.getSize() << "\n";
+    std::cout << "  Размер после второго pop_back: ";
+    machineContainer.pop_back();
+    std::cout << machineContainer.getSize() << "\n";
+
+    std::cout << "\nОставшиеся станки после удалений:\n";
+    for (size_t i = 0; i < machineContainer.getSize(); i++) {
+        std::cout << "  [" << i << "] ";
+        printMachineInfo(*machineContainer[i]);
     }
 
-    std::cout << "\nПоиск станка с моделью '1K62':\n";
-    auto it = std::find_if(machineContainer.begin(), machineContainer.end(), 
-                           FindMachineByModel("1K62"));
-    if (it != machineContainer.end()) {
-        std::cout << "  Найден: ";
-        printMachineInfo(*(*it));
-    } else {
-        std::cout << "  Станок не найден\n";
-    }
+    std::cout << "\nИнформация о контейнере:\n";
+    std::cout << "  Размер: " << machineContainer.getSize() << "\n";
+    std::cout << "  Ёмкость: " << machineContainer.getCapacity() << "\n";
 
-    std::cout << "\nСортировка станков по мощности (возрастание):\n";
-    std::sort(machineContainer.begin(), machineContainer.end(), compareMachinePower);
-    for (const auto& m : machineContainer) {
-        std::cout << "  " << m->getModel() << " -> " << m->getPower() << " кВт\n";
-    }
+    std::cout << "\n--- 2. Контейнер MyHeapContainer<Human*> (работники) ---\n";
 
-    if (machineContainer.getSize() > 0) {
-        auto maxIt = std::max_element(machineContainer.begin(), machineContainer.end(),
-            [](const Machine* a, const Machine* b) {
-                return a->getPower() < b->getPower();
-            });
-        std::cout << "\nСамый мощный станок:\n";
-        printMachineInfo(*(*maxIt));
-    }
+    MyHeapContainer<Human*> humanContainer;
 
-    std::cout << "\n--- 2. Контейнер MyContainer<Human*> (работники) ---\n";
-
-    MyContainer<Human*> humanContainer;
-
+    std::cout << "Добавляем работников:\n";
     humanContainer.push_back(new Worker("Иван Петров", 32, 1001, 8));
+    std::cout << "  [+] Worker Иван Петров\n";
+    
     humanContainer.push_back(new Worker("Сергей Сидоров", 28, 1002, 5));
+    std::cout << "  [+] Worker Сергей Сидоров\n";
+    
     humanContainer.push_back(new Accountant("Елена Смирнова", 41, 2001, "Расчётный"));
-    humanContainer.push_back(new Worker("Анна Кузнецова", 35, 1004, 10));
+    std::cout << "  [+] Accountant Елена Смирнова\n";
 
-    std::cout << "Добавлено работников: " << humanContainer.getSize() << "\n\n";
-
-    std::cout << "Список работников:\n";
-    for (const auto& h : humanContainer) {
-        printHumanInfo(*h);
+    std::cout << "\nСписок работников:\n";
+    for (size_t i = 0; i < humanContainer.getSize(); i++) {
+        std::cout << "  [" << i << "] ";
+        printHumanInfo(*humanContainer[i]);
     }
 
-    std::cout << "\nПоиск сотрудника по имени 'Сергей Сидоров':\n";
-    auto humanIt = std::find_if(humanContainer.begin(), humanContainer.end(),
-                                FindHumanByName("Сергей Сидоров"));
-    if (humanIt != humanContainer.end()) {
-        std::cout << "  Найден: ";
-        printHumanInfo(*(*humanIt));
+    std::cout << "\n--- 3. Контейнер с простыми типами (int) ---\n";
+
+    MyHeapContainer<int> numbers;
+
+    std::cout << "Добавляем числа:\n";
+    for (int val : {42, 17, 99, 5, 31, 88, 12}) {
+        numbers.push_back(val);
+        std::cout << "  [+] " << val << " | Размер: " << numbers.getSize() << "\n";
     }
 
-    std::cout << "\nСортировка работников по возрасту:\n";
-    std::sort(humanContainer.begin(), humanContainer.end(), compareWorkerAge);
-    for (const auto& h : humanContainer) {
-        std::cout << "  " << h->getName() << ", возраст: " << h->getAge() << " лет\n";
+    std::cout << "\nЧисла в порядке добавления:\n";
+    std::cout << "  ";
+    for (auto it = numbers.begin(); it != numbers.end(); ++it) {
+        std::cout << *it << " ";
+    }
+    std::cout << "\n";
+
+    std::cout << "\nДоступ по индексу:\n";
+    for (size_t i = 0; i < numbers.getSize(); i++) {
+        std::cout << "  numbers[" << i << "] = " << numbers[i] << "\n";
     }
 
-    std::cout << "\n--- 3. Контейнер с простыми типами ---\n";
+    std::cout << "\nУдаляем последние 2 числа:\n";
+    std::cout << "  Было: ";
+    for (auto it = numbers.begin(); it != numbers.end(); ++it) {
+        std::cout << *it << " ";
+    }
+    std::cout << "\n";
+    numbers.pop_back();
+    numbers.pop_back();
+    std::cout << "  Стало: ";
+    for (auto it = numbers.begin(); it != numbers.end(); ++it) {
+        std::cout << *it << " ";
+    }
+    std::cout << "\n";
 
-    MyContainer<int> numbers;
-    numbers.push_back(10);
-    numbers.push_back(5);
-    numbers.push_back(8);
-    numbers.push_back(3);
-
-    std::cout << "Числа до сортировки: ";
-    for (const auto& n : numbers) std::cout << n << " ";
-    std::cout << std::endl;
-
-    std::sort(numbers.begin(), numbers.end());
-    std::cout << "Числа после сортировки: ";
-    for (const auto& n : numbers) std::cout << n << " ";
-    std::cout << std::endl;
-
+    // Очистка
     for (auto it = machineContainer.begin(); it != machineContainer.end(); ++it) {
         delete *it;
     }
-
     for (auto it = humanContainer.begin(); it != humanContainer.end(); ++it) {
         delete *it;
     }
+
+    std::cout << "\n=== Тестирование завершено успешно! ===\n";
 
     return 0;
 }

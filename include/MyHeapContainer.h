@@ -27,29 +27,26 @@ private:
 
     }
     
-    // Получить элемент по глобальному индексу (из буфера или heap)
     T& getElementAt(size_t index) {
-        
-        if (index < buffer_count){
+        if (index < buffer_count) {
             return buffer[index];
         } else {
-            return heap[index - buffer_index]
+            return heap[index - buffer_count];
         }
-
     }
     
     const T& getElementAt(size_t index) const {
-        if (index < buffer_count){
+        if (index < buffer_count) {
             return buffer[index];
         } else {
-            return heap[index - buffer_index]
+            return heap[index - buffer_count];
         }
     }
 
 public:
-    MyContainer() : buffer_count(0), total_size(0) {}
+    MyHeapContainer() : buffer_count(0), total_size(0) {}
     
-    ~MyContainer() {}
+    ~MyHeapContainer() {}
 
     size_t getSize() const {
         return total_size;
@@ -60,13 +57,12 @@ public:
     }
 
     void push_back(const T& value) {
-        if (buffer_count < BUFFER_SIZE){
-            buffer[buffer_size++] = value;
+        if (buffer_count < BUFFER_SIZE) {
+            buffer[buffer_count++] = value;
         } else {
             flushBufferToHeap();
             buffer[buffer_count++] = value;
         }
-
         total_size++;
     }
 
@@ -85,13 +81,10 @@ public:
         return getElementAt(index);
     }
 
-    // ===== ИТЕРАТОР =====
     class Iterator {
     private:
-        // TODO: как хранить позицию в двух структурах?
-        // Вариант: хранить индекс в общей логической последовательности
-        MyContainer* container;
-        size_t current_pos;  // позиция в общем облике [0, total_size)
+        MyHeapContainer* container;
+        size_t current_pos;
         
     public:
         using iterator_category = std::random_access_iterator_tag;
@@ -100,98 +93,106 @@ public:
         using pointer = T*;
         using reference = T&;
 
-        Iterator(MyContainer* cont = nullptr, size_t pos = 0) 
+        Iterator(MyHeapContainer* cont = nullptr, size_t pos = 0) 
             : container(cont), current_pos(pos) {}
         
-        // TODO: реализовать все операторы
-
         reference operator*() const {
-            // TODO: используй container->getElementAt(current_pos)
+            return container->getElementAt(current_pos);
         }
 
         pointer operator->() const {
-            // TODO
+            return &(container->getElementAt(current_pos));
         }
 
         Iterator& operator++() {
-            // TODO
+            ++current_pos;
+            return *this;
         }
 
         Iterator operator++(int) {
-            // TODO
+            Iterator old = *this;
+            ++current_pos;
+            return old;
         }
 
         Iterator& operator--() {
-            // TODO
+            --current_pos;
+            return *this;
         }
 
         Iterator operator--(int) {
-            // TODO
+            Iterator old = *this;
+            --current_pos;
+            return old;
         }
 
+        // Арифметика
         Iterator operator+(difference_type n) const {
-            // TODO
+            return Iterator(container, current_pos + n);
         }
 
         Iterator operator-(difference_type n) const {
-            // TODO
+            return Iterator(container, current_pos - n);
         }
 
         difference_type operator-(const Iterator& other) const {
-            // TODO
+            return current_pos - other.current_pos;
         }
 
         Iterator& operator+=(difference_type n) {
-            // TODO
+            current_pos += n;
+            return *this;
         }
 
         Iterator& operator-=(difference_type n) {
-            // TODO
+            current_pos -= n;
+            return *this;
         }
 
         reference operator[](difference_type n) const {
-            // TODO
+            return container->getElementAt(current_pos + n);
         }
 
+        // Сравнение
         bool operator==(const Iterator& other) const {
-            // TODO
+            return container == other.container && current_pos == other.current_pos;
         }
 
         bool operator!=(const Iterator& other) const {
-            // TODO
+            return !(*this == other);
         }
 
         bool operator<(const Iterator& other) const {
-            // TODO
+            return current_pos < other.current_pos;
         }
 
         bool operator>(const Iterator& other) const {
-            // TODO
+            return current_pos > other.current_pos;
         }
 
         bool operator<=(const Iterator& other) const {
-            // TODO
+            return current_pos <= other.current_pos;
         }
 
         bool operator>=(const Iterator& other) const {
-            // TODO
+            return current_pos >= other.current_pos;
         }
     };
 
     Iterator begin() {
-        // TODO: возвращаем итератор с pos=0
+        return Iterator(this, 0);
     }
 
     Iterator end() {
-        // TODO: возвращаем итератор с pos=total_size
+        return Iterator(this, total_size);
     }
-    
+
     Iterator begin() const {
-        // TODO: const версия
+        return Iterator(const_cast<MyHeapContainer*>(this), 0);
     }
 
     Iterator end() const {
-        // TODO: const версия
+        return Iterator(const_cast<MyHeapContainer*>(this), total_size);
     }
 };
 
