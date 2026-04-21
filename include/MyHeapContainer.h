@@ -67,7 +67,7 @@ public:
     }
 
     void pop_back() {
-        if (total_size == 0) return;
+        if (buffer_count == 0) return;
         
         buffer_count--;
         total_size--;
