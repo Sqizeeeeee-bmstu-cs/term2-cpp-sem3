@@ -4,15 +4,19 @@
 #include "Grinding.h"
 #include "Worker.h"
 #include "Accountant.h"
+#include "PendingQueue.h"
+
 #include <iostream>
 #include <algorithm>
 #include <string>
+
 
 void printMachineInfo(const Machine& m) {
     std::cout << "  Тип: " << m.getType() 
               << ", Модель: " << m.getModel() 
               << ", Мощность: " << m.getPower() << " кВт" << std::endl;
 }
+
 
 void printHumanInfo(const Human& h) {
     std::cout << "  Имя: " << h.getName() 
@@ -24,12 +28,46 @@ bool compareMachinePower(const Machine* a, const Machine* b) {
     return a->getPower() < b->getPower();
 }
 
+void printMachineStatus(Machine* machine) {
+    std::cout << "    Станок: " << machine->getModel() 
+              << " | Мощность: " << machine->getPower() 
+              << " кВт | Статус: " << (machine->getIsWorking() ? "работает" : "выключен") << std::endl;
+}
+
 int main() {
     std::cout << "=== Демонстрация шаблонного контейнера MyHeapContainer<T> ===\n\n";
 
     std::cout << "--- 1. Контейнер MyHeapContainer<Machine*> (станки) ---\n";
 
     MyHeapContainer<Machine*> machineContainer;
+
+    // Создаём станки
+    Lathe* lathe1 = new Lathe("16K20", 11, 400);
+    Milling* milling1 = new Milling("6R12", 7, 1600);
+    Lathe* lathe2 = new Lathe("1K62", 10, 300);
+    Grinding* grinding1 = new Grinding("3M174", 5, 0.002);
+
+    std::cout << "=== Демонстрация очереди отложенных вызовов PendingQueue ===\n\n";
+    std::cout << "Создаём очередь отложенных операций со станками:\n";
+
+    PendingQueue machineQueue;
+    // Добавляем отложенные вызовы методов станков
+    machineQueue.enqueue(&Machine::start, lathe1);
+    machineQueue.enqueue(&Machine::start, milling1);
+    machineQueue.enqueue(&Machine::start, lathe2);
+    machineQueue.enqueue(&Machine::start, grinding1);
+
+    // Вызовы методов с параметрами
+    machineQueue.enqueue(printMachineStatus, lathe1);
+    machineQueue.enqueue(printMachineStatus, milling1);
+
+    machineQueue.enqueue(&Machine::stop, lathe1);
+    machineQueue.enqueue(&Machine::stop, milling1);
+
+    std::cout << "\nВыполняем все отложенные операции:\n";
+    machineQueue.run_all();
+
+    std::cout << "\n" << std::string(60, '=') << "\n\n";
 
     std::cout << "Добавляем станки (заполняем буфер из 5 элементов):\n";
     machineContainer.push_back(new Lathe("16K20", 11, 400));
@@ -158,8 +196,6 @@ int main() {
     for (auto it = humanContainer.begin(); it != humanContainer.end(); ++it) {
         delete *it;
     }
-
-    std::cout << "\n=== Тестирование завершено успешно! ===\n";
 
     return 0;
 }
