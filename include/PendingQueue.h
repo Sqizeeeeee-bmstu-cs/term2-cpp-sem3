@@ -26,7 +26,6 @@ public:
     }
 };
 
-// Очередь отложенных вызовов
 class PendingQueue : public std::queue<std::unique_ptr<IPending>> {
 public:
     ~PendingQueue() {

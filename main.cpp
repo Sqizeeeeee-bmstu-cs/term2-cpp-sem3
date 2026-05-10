@@ -41,7 +41,7 @@ int main() {
 
     MyHeapContainer<Machine*> machineContainer;
 
-    // Создаём станки
+
     Lathe* lathe1 = new Lathe("16K20", 11, 400);
     Milling* milling1 = new Milling("6R12", 7, 1600);
     Lathe* lathe2 = new Lathe("1K62", 10, 300);
@@ -51,13 +51,13 @@ int main() {
     std::cout << "Создаём очередь отложенных операций со станками:\n";
 
     PendingQueue machineQueue;
-    // Добавляем отложенные вызовы методов станков
+
     machineQueue.enqueue(&Machine::start, lathe1);
     machineQueue.enqueue(&Machine::start, milling1);
     machineQueue.enqueue(&Machine::start, lathe2);
     machineQueue.enqueue(&Machine::start, grinding1);
 
-    // Вызовы методов с параметрами
+
     machineQueue.enqueue(printMachineStatus, lathe1);
     machineQueue.enqueue(printMachineStatus, milling1);
 
@@ -189,7 +189,6 @@ int main() {
     }
     std::cout << "\n";
 
-    // Очистка
     for (auto it = machineContainer.begin(); it != machineContainer.end(); ++it) {
         delete *it;
     }
